@@ -15,7 +15,7 @@ import config from './config'
 const logger = new LoggerService()
 const pjson = { version: 1, name: 'lambda' } // const pjson = require('../../packaje.json')
 
-type JwtBodyWithSellerType = JwtBody & { seller_type: SellerType }
+type JwtBodyWithSeller = JwtBody & { seller_type: SellerType; seller_id: string }
 
 export const baseHandler = async (event: Event, context = {} as any) => {
   const lambda = {
@@ -33,21 +33,24 @@ export const baseHandler = async (event: Event, context = {} as any) => {
     const jwt = typeof authHeader === 'string' && authHeader.trim().indexOf('Bearer ') === 0 ? authHeader.trim().substring(7) : ''
 
     const verifiedJwt = verify(jwt, process.env.JWT_SECRET)
-    // const jwtPayloadAAA = verifiedJwt && (verifiedJwt.body as JwtBodyWithSellerType)
+
+    // const jwtPayloadAAA = verifiedJwt && (verifiedJwt.body as JwtBodyWithSeller)
     // const jwtPayload = { ...jwtPayloadAAA, seller_type: 'multivende' as SellerType, seller_id: '927c9f96-b716-4d1b-b1f7-b5c3542e7f42' }
-    const jwtPayload = verifiedJwt && (verifiedJwt.body as JwtBodyWithSellerType)
-    const sellerType = jwtPayload ? jwtPayload.seller_type : null
+    const jwtPayload = verifiedJwt && (verifiedJwt.body as JwtBodyWithSeller)
+
+    if (!jwtPayload?.seller_id || !jwtPayload?.seller_type) throw errorBuilder(errorDict.error_in_jwt_payload, logger)
 
     const incomingSkus: Skus = { sku: body.skus.map((s) => s.sku) }
+    const pimPayload = { ...incomingSkus, sellerId: jwtPayload.seller_id }
     // preguntar que hace el checkVariants en el PIM porque luego en el monorepo repite el mismo proceso que aca
     // verifica el jwt, arma un objeto con un array de skus y consulta el PIM
     // tal vez este llamado al PIM este de mas si igual lo hace de nuevo en el monorepo
 
-    const invalidSkus = await httpRepository.pimCheckVariants(jwt, sellerType, incomingSkus)
+    const invalidSkus = await httpRepository.pimCheckVariants(jwt, jwtPayload.seller_type, pimPayload)
 
     if (invalidSkus?.sku?.length > 0) throw errorBuilder(errorDict.pim_conection_error, logger)
 
-    const stock = await httpRepository.stockHandle(jwt, sellerType, body)
+    const stock = await httpRepository.stockHandle(jwt, jwtPayload.seller_type, body)
 
     return {
       metadata: lambda,
@@ -61,7 +64,7 @@ export const baseHandler = async (event: Event, context = {} as any) => {
 }
 
 const eiffelPim = middy(baseHandler)
-  // .use(LogLambdaStartMiddleware({ logger: logger }))
+  .use(LogLambdaStartMiddleware({ logger: logger }))
   .use(ErrorHandlerMiddleware({ logger: logger }))
 
 // Esto puede ser un middleware.
@@ -101,9 +104,12 @@ export function transformRequestBody(body: StockSkus) {
 ///////////////////////////////////////////////////////////////////////
 // CODIGO EXPRESS
 ///////////////////////////////////////////////////////////////////////
-export const handler = async (req: any, res: any) => {
-  const response = await eiffelPim(req, res)
-
-  res.json(response)
+export const lambdaEiffelPim = async (req: any, res: any, next: any) => {
+  try {
+    const response = await eiffelPim(req, res)
+    res.json(response)
+  } catch (error) {
+    next(error)
+  }
 }
 ///////////////////////////////////////////////////////////////////////

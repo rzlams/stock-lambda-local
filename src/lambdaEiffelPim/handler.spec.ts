@@ -1,8 +1,9 @@
 import { baseHandler, validateRequestBody, transformRequestBody } from './handler'
-import { Event, StockItem, sellerTypes, StockSkus } from './common/types'
+import { Event, StockItem, sellerTypes, StockSkus, PimPayload, Skus, Stock } from './common/types'
 import config from './config'
 import { verify } from 'njwt'
 import { httpRepository } from './common/http.repository'
+import errorDict from './middleware/errorHandler/error.json'
 
 jest.mock('njwt')
 const verifyMock = verify as jest.MockedFunction<typeof verify>
@@ -73,33 +74,46 @@ describe(`baseHandler test suite`, () => {
     jest.clearAllMocks()
   })
 
-  const decodedJwt = {
+  const decodedValidJwt = {
     body: {
       seller_type: sellerTypes[generateRandomInt(sellerTypes.length - 1)],
+      seller_id: 'FAKE_SELLER_ID',
     },
   }
-  const validJwt = 'VALID_JWT'
+  const validJwt = JSON.stringify(decodedValidJwt)
   const invalidJwt = 'INVALID_JWT'
-  const jwtErrorMessage = 'Invalid Jwt'
+  const jwtErrorMessage = 'Invalid Jwt Error Message'
   const event = buildEvent({ jwt: validJwt, bodySkusLength: 3 })
-  const skus = {
-    sku: [event.body.skus[0], event.body.skus[1], event.body.skus[2]],
-  }
-  const pimSkus = { sku: [skus.sku[0].sku, skus.sku[1].sku, skus.sku[2].sku] }
+  const pimSkus: Skus = { sku: [event.body.skus[0].sku, event.body.skus[1].sku, event.body.skus[2].sku] }
+  const pimPayload: PimPayload = { ...pimSkus, sellerId: decodedValidJwt.body.seller_id }
 
   verifyMock.mockImplementation((jwt) => {
     if (jwt === invalidJwt) throw new Error(jwtErrorMessage)
 
-    return decodedJwt as any
+    return JSON.parse(jwt as string)
   })
 
-  it(`throws an invalid JWT exception`, async () => {
+  it(`throws an invalid JWT exception on verify`, async () => {
     const invalidEvent = buildEvent({ jwt: invalidJwt })
 
     await expect(() => baseHandler(invalidEvent)).rejects.toThrow(jwtErrorMessage)
     expect(verifyMock).toHaveBeenCalledTimes(1)
 
     expect(verifyMock).toHaveBeenCalledWith(invalidJwt, process.env.JWT_SECRET)
+    expect(verifyMock).toHaveBeenCalledTimes(1)
+
+    expect(pimCheckVariantsMock).not.toHaveBeenCalled()
+    expect(stockHandleMock).not.toHaveBeenCalled()
+  })
+
+  it(`throws an invalid JWT exception when it misses seller properties`, async () => {
+    const noSellerPropsJwt = JSON.stringify({ ...decodedValidJwt, body: { seller_type: null, seller_id: null } })
+    const invalidEvent = buildEvent({ jwt: noSellerPropsJwt })
+
+    await expect(() => baseHandler(invalidEvent)).rejects.toThrow(errorDict.error_in_jwt_payload.message)
+    expect(verifyMock).toHaveBeenCalledTimes(1)
+
+    expect(verifyMock).toHaveBeenCalledWith(noSellerPropsJwt, process.env.JWT_SECRET)
     expect(verifyMock).toHaveBeenCalledTimes(1)
 
     expect(pimCheckVariantsMock).not.toHaveBeenCalled()
@@ -115,7 +129,7 @@ describe(`baseHandler test suite`, () => {
     expect(verifyMock).toHaveBeenCalledWith(validJwt, process.env.JWT_SECRET)
     expect(verifyMock).toHaveBeenCalledTimes(1)
 
-    expect(pimCheckVariantsMock).toHaveBeenCalledWith(validJwt, decodedJwt.body.seller_type, pimSkus)
+    expect(pimCheckVariantsMock).toHaveBeenCalledWith(validJwt, decodedValidJwt.body.seller_type, pimPayload)
     expect(pimCheckVariantsMock).toHaveBeenCalledTimes(1)
 
     expect(stockHandleMock).not.toHaveBeenCalled()
@@ -131,13 +145,12 @@ describe(`baseHandler test suite`, () => {
     expect(verifyMock).toHaveBeenCalledWith(validJwt, process.env.JWT_SECRET)
     expect(verifyMock).toHaveBeenCalledTimes(1)
 
-    expect(pimCheckVariantsMock).toHaveBeenCalledWith(validJwt, decodedJwt.body.seller_type, pimSkus)
+    expect(pimCheckVariantsMock).toHaveBeenCalledWith(validJwt, decodedValidJwt.body.seller_type, pimPayload)
     expect(pimCheckVariantsMock).toHaveBeenCalledTimes(1)
   })
 
   it(`success response`, async () => {
-    // Respuesta del stockHandle
-    const stock = {}
+    const stock: Stock = { stock: event.body.skus }
     pimCheckVariantsMock.mockResolvedValueOnce({ sku: [] })
     stockHandleMock.mockResolvedValueOnce(stock)
 
@@ -146,10 +159,10 @@ describe(`baseHandler test suite`, () => {
     expect(verifyMock).toHaveBeenCalledWith(validJwt, process.env.JWT_SECRET)
     expect(verifyMock).toHaveBeenCalledTimes(1)
 
-    expect(pimCheckVariantsMock).toHaveBeenCalledWith(validJwt, decodedJwt.body.seller_type, pimSkus)
+    expect(pimCheckVariantsMock).toHaveBeenCalledWith(validJwt, decodedValidJwt.body.seller_type, pimPayload)
     expect(pimCheckVariantsMock).toHaveBeenCalledTimes(1)
 
-    expect(stockHandleMock).toHaveBeenCalledWith(validJwt, decodedJwt.body.seller_type, event.body)
+    expect(stockHandleMock).toHaveBeenCalledWith(validJwt, decodedValidJwt.body.seller_type, event.body)
     expect(stockHandleMock).toHaveBeenCalledTimes(1)
 
     expect(result.body).toEqual(stock)
@@ -188,7 +201,7 @@ function buildRequestBody({ skusAdded = [] as any[], skusLength = generateRandom
   return { skus: [...skus, ...skusAdded] }
 }
 
-function buildEvent({ jwt = 'JSON_WEB_TOKEN', bodySkusLength = 3 as any, ...overrides } = {}): Event {
+function buildEvent({ jwt = 'JSON_WEB_TOKEN', bodySkusLength = 3 as number, ...overrides } = {}): Event {
   return {
     headers: {
       authorization: `Bearer ${jwt}`,

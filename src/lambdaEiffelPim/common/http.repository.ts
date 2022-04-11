@@ -2,12 +2,12 @@ import { AxiosError, AxiosRequestConfig } from 'axios'
 import Axios from 'axios'
 import { StockSkus } from './types'
 import { LoggerService } from '../common/logger/logger.service'
-import { SellerType, Skus, ClientType, Stock } from '../common/types'
+import { SellerType, Skus, ClientType, Stock, PimPayload } from '../common/types'
 
 const logger = new LoggerService()
 
 export const httpRepository = {
-  pimCheckVariants: async (jwt: string, sellerType: SellerType, data: Skus): Promise<Skus> => {
+  pimCheckVariants: async (jwt: string, sellerType: SellerType, data: PimPayload): Promise<Skus> => {
     try {
       const path = process.env.PIM_CHECK_VARIANTS_PATH as string
       const response = await getClient('PIM', jwt, sellerType).post(path, data)
