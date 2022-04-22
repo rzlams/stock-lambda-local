@@ -1,51 +1,50 @@
-import { errorBuilder } from './error-builder'
-import errorDict from './error.json'
+import { Logger } from '../../common/types'
+import { getFalsyValue } from '../../test/generators'
+import errorBuilder, { CustomError } from './error-builder'
+import errorDict from './error'
 
-jest.spyOn(console, 'log').mockImplementation(() => {})
+jest.spyOn(console, 'error').mockImplementation()
 
-describe('ErrorBuilderSpec', () => {
-  const logger = {
-    error: jest.fn(),
-    log: jest.fn(),
-  }
+const loggerMock = {
+  error: jest.fn(),
+} as unknown as Logger
 
-  it('should return an error with inputError empty', () => {
-    expect.assertions(2)
-    const result = errorBuilder(null, logger)
-    expect(typeof result).toBe('object')
-    expect(result instanceof Error).toBe(true)
+describe('errorBuilder test suite', () => {
+  const validInputErrors = [errorDict.error_not_found, errorDict.unauthorized, errorDict.error_in_jwt_payload, errorDict.pim_conection_error]
+  const baseError = errorDict.internal_error
+  const invalidInputErrors = [
+    { inputError: {} as unknown, message: `empty object` },
+    { inputError: null, message: `null error` },
+    { inputError: undefined, message: `undefined error` },
+    {
+      inputError: { ...baseError, code: getFalsyValue() },
+      message: `error without code`,
+    },
+    // {
+    //   inputError: { ...baseError, name: getFalsyValue() },
+    //   message: `error without name`,
+    // },
+    {
+      inputError: { ...baseError, code: 'FAKE_INTERNAL_CODE' },
+      message: `error which code doesn't exists`,
+    },
+  ]
+
+  validInputErrors.forEach((item) => {
+    it(`returns formatted error - valid inputError - ${item.code}`, () => {
+      const errorObject = errorBuilder(item as CustomError, loggerMock)
+
+      expect(errorObject.name).toBe(item.name)
+      expect(errorObject.message).toEqual(JSON.stringify(item))
+    })
   })
 
-  it('should call the logger error function 1 time', () => {
-    errorBuilder(null, logger)
-    expect(logger.error).toBeCalledTimes(1)
-  })
+  invalidInputErrors.forEach((item) => {
+    it(`returns internal_error - invalid inputError - ${item.message}`, () => {
+      const errorObject = errorBuilder(item.inputError as CustomError, loggerMock)
 
-  it('should call the logger error function 2 times and the log function 1', () => {
-    expect.assertions(2)
-    errorBuilder(errorDict?.internal_error, logger)
-    expect(logger.error).toBeCalledTimes(2)
-    expect(logger.log).toBeCalledTimes(1)
-  })
-
-  it('should return an bulk_insert_error', () => {
-    expect.assertions(1)
-    const result = errorBuilder(errorDict?.bulk_insert_error, logger)
-    expect(result.message).toBe(JSON.stringify(errorDict?.bulk_insert_error))
-  })
-
-  it('should return an internal error', () => {
-    expect.assertions(2)
-    const emptyParamResult = errorBuilder(null, logger)
-    expect(emptyParamResult.message).toBe(JSON.stringify(errorDict?.internal_error))
-    const withParamResult = errorBuilder(
-      {
-        name: 'test',
-        status: 500,
-        message: 'test message',
-      },
-      logger
-    )
-    expect(withParamResult.message).toBe(JSON.stringify(errorDict?.internal_error))
+      expect(errorObject.name).toBe(baseError.name)
+      expect(errorObject.message).toEqual(JSON.stringify(baseError))
+    })
   })
 })

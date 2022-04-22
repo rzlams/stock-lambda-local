@@ -1,38 +1,45 @@
-import * as LogHandlerMiddleware from './logLambdaStartHandlerMiddleware';
-import middy from '@middy/core';
-import MiddlewareFunction = middy.MiddlewareFn;
-import mockedRequest from './../__mocks__/request.mock';
+import LogLambdaStartMiddleware from './logLambdaStartHandlerMiddleware'
+import mockedRequest from '../__mocks__/request.mock'
 
-jest.spyOn(console, "log").mockImplementation(() => {});
-jest.spyOn(console, "error").mockImplementation(() => {});
+const consoleLogMock = jest.spyOn(console, 'log').mockImplementation()
+const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation()
 
 describe('LogLambdaStartHandlerMiddleware', () => {
-  
-  let middleware: any
-
-  beforeAll(async () => {
-    middleware = await LogHandlerMiddleware.LogLambdaStartMiddleware();
-  });
-
   it('should LogLambdaStartMiddleware return undefined with a request as an object', async () => {
-    expect.assertions(1);
-    const output = await middleware.before(mockedRequest as any) 
-    expect(output).toBe(undefined);
-  });
-    
+    expect.assertions(3)
+    const output = await LogLambdaStartMiddleware().before(
+      mockedRequest as any // eslint-disable-line
+    )
+    expect(output).toBe(undefined)
+
+    expect(consoleLogMock).toBeCalledTimes(1)
+    expect(consoleLogMock).toHaveBeenCalledWith(mockedRequest)
+  })
+
   it('should LogLambdaStartMiddleware return undefined with a request as a string', async () => {
-    expect.assertions(1);
-    const output = await middleware.before(JSON.stringify(mockedRequest) as any)
-    expect(output).toBe(undefined);
-  });
+    expect.assertions(3)
+    const output = await LogLambdaStartMiddleware().before(
+      JSON.stringify(mockedRequest) as any // eslint-disable-line
+    )
+    expect(output).toBe(undefined)
+
+    expect(consoleLogMock).toBeCalledTimes(1)
+    expect(consoleLogMock).toHaveBeenCalledWith(mockedRequest)
+  })
 
   it('should LogLambdaStartMiddleware return undefined when catch error', async () => {
-    expect.assertions(1);
-    jest.spyOn(JSON, 'parse').mockImplementation(() => {
-      throw new Error('Error')
-    });
-    const output = await middleware.before(JSON.stringify(mockedRequest) as any)
-    expect(output).toBe(undefined);
-  });
+    expect.assertions(3)
+    const errorMessage = 'Error'
 
-});
+    jest.spyOn(JSON, 'parse').mockImplementation(() => {
+      throw new Error(errorMessage)
+    })
+    const output = await LogLambdaStartMiddleware().before(
+      JSON.stringify(mockedRequest) as any // eslint-disable-line
+    )
+    expect(output).toBe(undefined)
+
+    expect(consoleErrorMock).toBeCalledTimes(1)
+    expect(consoleErrorMock).toHaveBeenCalledWith(new Error(errorMessage))
+  })
+})

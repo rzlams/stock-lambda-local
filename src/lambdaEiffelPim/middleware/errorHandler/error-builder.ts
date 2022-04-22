@@ -1,29 +1,29 @@
-import { CustomError } from './error.dto'
-import errorDict from './error.json'
+import errorDict from './error'
+import { Logger } from '../../common/types'
 
-export const errorBuilder = (inputError: any, logger: any): Error => {
-  let error: CustomError = errorDict.internal_error
+type InternalCode = keyof typeof errorDict
+export type CustomError = typeof errorDict[InternalCode]
 
-  if (inputError) {
-    logger.error({ error_handler_request: inputError })
+function getError(inputError: CustomError) {
+  const internalCode = inputError?.code as InternalCode
 
-    let internalCode: keyof typeof errorDict = inputError.code
+  if (!inputError?.name || !errorDict[internalCode]) return errorDict.internal_error
 
-    logger.log(internalCode, errorDict[internalCode])
+  return inputError as CustomError
+}
 
-    if (!errorDict[internalCode]) {
-      error = { ...errorDict.internal_error }
-    } else {
-      error = { ...inputError }
-    }
-  }
+const errorBuilder = (inputError: CustomError, logger = console as Logger): Error => {
+  logger.error('error_handler_request', inputError)
 
-  logger.error({ error_handler_response: error })
+  const error = getError(inputError)
 
-  let newError = new Error()
+  logger.error('error_handler_response', error)
 
+  const newError = new Error()
   newError.name = error.name
   newError.message = JSON.stringify(error)
 
   return newError
 }
+
+export default errorBuilder

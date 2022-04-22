@@ -1,43 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testExecutions version="1">
-  <file path="/home/rzlams/Desktop/www/acid_labs/stock/lambdas/local/src/lambdaEiffelPim/handler.spec.ts">
-    <testCase name="validateRequestBody only allows some payloads as input valid payload" duration="1"/>
-    <testCase name="validateRequestBody only allows some payloads as input invalid payload - empty body" duration="17"/>
-    <testCase name="validateRequestBody only allows some payloads as input invalid payload - skus is null" duration="0"/>
-    <testCase name="validateRequestBody only allows some payloads as input invalid payload - skus is empty array" duration="0"/>
-    <testCase name="validateRequestBody only allows some payloads as input invalid payload - skus length (102) is larger than max length (100)" duration="1"/>
-    <testCase name="validateRequestBody only allows some payloads as input invalid payload - invalid sku - {&quot;sku&quot;:&quot;&quot;,&quot;quantity&quot;:8}" duration="0"/>
-    <testCase name="validateRequestBody only allows some payloads as input invalid payload - invalid quantity - {&quot;sku&quot;:&quot;I0MTYE404K-6&quot;}" duration="0"/>
-    <testCase name="transformRequestBody returns formatted body (typeof Stock) format payload - already formatted" duration="2"/>
-    <testCase name="transformRequestBody returns formatted body (typeof Stock) format payload - duplicate skus" duration="2"/>
-    <testCase name="baseHandler test suite throws an invalid JWT exception on verify" duration="7"/>
-    <testCase name="baseHandler test suite throws an invalid JWT exception when it misses seller properties" duration="2"/>
-    <testCase name="baseHandler test suite throws an exception when pimCheckVariants reponds with invalid skus" duration="1"/>
-    <testCase name="baseHandler test suite throws an exception for stockHandle bad request" duration="2"/>
-    <testCase name="baseHandler test suite success response" duration="2"/>
+  <file path="/home/rzlams/Desktop/www/acid_labs/stock/lambdas/dss-lambda-eiffel-pim-local/src/lambdaEiffelPim/handler.spec.ts">
+    <testCase name="baseHandler test suite throws an invalid JWT exception when it misses seller properties" duration="21"/>
+    <testCase name="baseHandler test suite set quantity (stock) zero for invalid skus" duration="2"/>
+    <testCase name="baseHandler test suite throws an exception for pimCheckVariants unauthorized request" duration="2"/>
+    <testCase name="baseHandler test suite success response without invalid skus" duration="1"/>
   </file>
-  <file path="/home/rzlams/Desktop/www/acid_labs/stock/lambdas/local/src/lambdaEiffelPim/common/logger/logger.service.spec.ts">
-    <testCase name="LoggerService logger.info should be called" duration="3"/>
-    <testCase name="LoggerService logger.error should be called" duration="0"/>
+  <file path="/home/rzlams/Desktop/www/acid_labs/stock/lambdas/dss-lambda-eiffel-pim-local/src/lambdaEiffelPim/common/logger/logger.service.spec.ts">
+    <testCase name="LoggerService logger.info should be called" duration="7"/>
+    <testCase name="LoggerService logger.error should be called" duration="1"/>
     <testCase name="LoggerService logger.warn should be called" duration="0"/>
-    <testCase name="LoggerService logger.debug should be called" duration="0"/>
+    <testCase name="LoggerService logger.debug should be called" duration="1"/>
     <testCase name="LoggerService logger.verbose should be called" duration="0"/>
   </file>
-  <file path="/home/rzlams/Desktop/www/acid_labs/stock/lambdas/local/src/lambdaEiffelPim/middleware/logLambdaStartHandlerMiddleware.spec.ts">
-    <testCase name="LogLambdaStartHandlerMiddleware should LogLambdaStartMiddleware return undefined with a request as an object" duration="0"/>
-    <testCase name="LogLambdaStartHandlerMiddleware should LogLambdaStartMiddleware return undefined with a request as a string" duration="1"/>
+  <file path="/home/rzlams/Desktop/www/acid_labs/stock/lambdas/dss-lambda-eiffel-pim-local/src/lambdaEiffelPim/middleware/logLambdaStartHandlerMiddleware.spec.ts">
+    <testCase name="LogLambdaStartHandlerMiddleware should LogLambdaStartMiddleware return undefined with a request as an object" duration="1"/>
+    <testCase name="LogLambdaStartHandlerMiddleware should LogLambdaStartMiddleware return undefined with a request as a string" duration="0"/>
     <testCase name="LogLambdaStartHandlerMiddleware should LogLambdaStartMiddleware return undefined when catch error" duration="0"/>
   </file>
-  <file path="/home/rzlams/Desktop/www/acid_labs/stock/lambdas/local/src/lambdaEiffelPim/middleware/errorHandler/errorHandlerMiddleware.spec.ts">
-    <testCase name="ErrorHandlerMiddlewareSpec should ErrorHandlerMiddleware throw a retry error" duration="5"/>
-    <testCase name="ErrorHandlerMiddlewareSpec should ErrorHandlerMiddleware throw an internal error" duration="1"/>
-    <testCase name="ErrorHandlerMiddlewareSpec should ErrorHandlerMiddleware throw a mocked error" duration="0"/>
+  <file path="/home/rzlams/Desktop/www/acid_labs/stock/lambdas/dss-lambda-eiffel-pim-local/src/lambdaEiffelPim/common/requestDTOs/requestDTOs.spec.ts">
+    <testCase name="validateRequestBody only allows some payloads as input valid payload" duration="1"/>
+    <testCase name="validateRequestBody only allows some payloads as input invalid payload - empty body" duration="7"/>
+    <testCase name="validateRequestBody only allows some payloads as input invalid payload - skus is null" duration="1"/>
+    <testCase name="validateRequestBody only allows some payloads as input invalid payload - skus is empty array" duration="1"/>
+    <testCase name="validateRequestBody only allows some payloads as input invalid payload - skus length (102) is larger than max length (100)" duration="1"/>
+    <testCase name="validateRequestBody only allows some payloads as input invalid payload - invalid sku - {&quot;sku&quot;:&quot;&quot;,&quot;quantity&quot;:2}" duration="0"/>
+    <testCase name="validateRequestBody only allows some payloads as input invalid payload - invalid quantity - {&quot;sku&quot;:&quot;ZHN0X1YGVN\&quot;-0&quot;,&quot;quantity&quot;:-1}" duration="1"/>
+    <testCase name="transformRequestBody returns formatted body (typeof Stock) format payload - already formatted" duration="1"/>
+    <testCase name="transformRequestBody returns formatted body (typeof Stock) format payload - duplicate skus" duration="1"/>
   </file>
-  <file path="/home/rzlams/Desktop/www/acid_labs/stock/lambdas/local/src/lambdaEiffelPim/middleware/errorHandler/error-builder.spec.ts">
-    <testCase name="ErrorBuilderSpec should return an error with inputError empty" duration="0"/>
-    <testCase name="ErrorBuilderSpec should call the logger error function 1 time" duration="0"/>
-    <testCase name="ErrorBuilderSpec should call the logger error function 2 times and the log function 1" duration="0"/>
-    <testCase name="ErrorBuilderSpec should return an bulk_insert_error" duration="0"/>
-    <testCase name="ErrorBuilderSpec should return an internal error" duration="0"/>
+  <file path="/home/rzlams/Desktop/www/acid_labs/stock/lambdas/dss-lambda-eiffel-pim-local/src/lambdaEiffelPim/common/httpRepository/http.repository.spec.ts">
+    <testCase name="httpRepository test suite pimCheckVariants returns a valid response" duration="1"/>
+    <testCase name="httpRepository test suite pimCheckVariants throws an exception" duration="6"/>
+    <testCase name="httpRepository test suite stockHandle returns a valid response" duration="0"/>
+    <testCase name="httpRepository test suite stockHandle throws an exception" duration="0"/>
+  </file>
+  <file path="/home/rzlams/Desktop/www/acid_labs/stock/lambdas/dss-lambda-eiffel-pim-local/src/lambdaEiffelPim/middleware/errorHandler/error-builder.spec.ts">
+    <testCase name="errorBuilder test suite returns formatted error - valid inputError - error_not_found" duration="0"/>
+    <testCase name="errorBuilder test suite returns formatted error - valid inputError - unauthorized" duration="0"/>
+    <testCase name="errorBuilder test suite returns formatted error - valid inputError - error_in_jwt_payload" duration="0"/>
+    <testCase name="errorBuilder test suite returns formatted error - valid inputError - pim_conection_error" duration="0"/>
+    <testCase name="errorBuilder test suite returns internal_error - invalid inputError - empty object" duration="1"/>
+    <testCase name="errorBuilder test suite returns internal_error - invalid inputError - null error" duration="0"/>
+    <testCase name="errorBuilder test suite returns internal_error - invalid inputError - undefined error" duration="1"/>
+    <testCase name="errorBuilder test suite returns internal_error - invalid inputError - error without code" duration="1"/>
+    <testCase name="errorBuilder test suite returns internal_error - invalid inputError - error which code doesn&apos;t exists" duration="0"/>
+  </file>
+  <file path="/home/rzlams/Desktop/www/acid_labs/stock/lambdas/dss-lambda-eiffel-pim-local/src/lambdaEiffelPim/middleware/errorHandler/errorHandlerMiddleware.spec.ts">
+    <testCase name="ErrorHandlerMiddlewareSpec should ErrorHandlerMiddleware throws an error_not_found error" duration="6"/>
+    <testCase name="ErrorHandlerMiddlewareSpec should ErrorHandlerMiddleware throws the request error" duration="1"/>
   </file>
 </testExecutions>

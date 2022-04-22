@@ -20,7 +20,19 @@ module.exports = {
   collectCoverage: true,
   collectCoverageFrom: ['**/*.(t|j)s'],
   coverageDirectory: '../coverage',
-  coveragePathIgnorePatterns: ['.d.ts', '.interface.ts', '.enum.ts$', '.spec.ts$', 'index.ts', 'types.ts$', '.mock.ts$', '.dto.ts$', '.json.ts$', '/__mocks__/'],
+  coveragePathIgnorePatterns: [
+    '.d.ts',
+    '.interface.ts',
+    '.enum.ts$',
+    '.spec.ts$',
+    'index.ts',
+    'types.ts$',
+    '.mock.ts$',
+    '.dto.ts$',
+    '.json.ts$',
+    '/__mocks__/',
+    'src/test/',
+  ],
   coverageProvider: 'v8',
   coverageReporters: ['json', 'lcov', 'text', 'html', 'text-summary'],
   coverageThreshold: {
@@ -34,4 +46,4 @@ module.exports = {
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/$1',
   },
-};
+}

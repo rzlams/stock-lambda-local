@@ -1,31 +1,26 @@
-
-import middy from '@middy/core';
-import MiddlewareFunction = middy.MiddlewareFn;
+import middy from '@middy/core'
+import MiddlewareFunction = middy.MiddlewareFn
 
 const defaults = {
-    logger: console
-  }
+  logger: console,
+}
 
-export const LogLambdaStartMiddleware = (opts: {} = {}) => {
+const LogLambdaStartMiddleware = (opts: Record<string, unknown> = {}) => {
   const options = { ...defaults, ...opts }
 
-  const before: MiddlewareFunction<any, any> = async (request) => {
+  const before: MiddlewareFunction<unknown, unknown> = async (request) => {
     try {
-        let requestLog:any;
-        if (typeof(request) === 'string') {
-          requestLog = JSON.parse(request);
-        } else {
-          requestLog = request;
-        };
-        options.logger.log(requestLog);
-        return;
-    } catch(error) {
-        options.logger.error(error);
-        return;
+      const requestLog = typeof request === 'string' ? JSON.parse(request) : request
+
+      options.logger.log(requestLog)
+      return
+    } catch (error) {
+      options.logger.error(error)
+      return
     }
   }
 
-  return {
-    before
-  };
+  return { before }
 }
+
+export default LogLambdaStartMiddleware
